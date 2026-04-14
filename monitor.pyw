@@ -118,7 +118,7 @@ CHAT_ID = -5085879014
 # Email (usando tus credenciales proporcionadas)
 EMAIL_FROM = "gramosr@usmp.pe"
 # EMAIL_TO = ["gramosr@usmp.pe"]
-EMAIL_TO = ["gramosr@usmp.pe", "scalleg@usmp.pe", "ecasasv@usmp.pe", "icajusola@usmp.pe", "rsoberonb@usmp.pe","lfernandezc@usmp.pe", "vmanayayc@usmp.pe", "apolancoc@usmp.pe"]
+EMAIL_TO = ["gramosr@usmp.pe", "rsoberonb@usmp.pe","lfernandezc@usmp.pe", "scalleg@usmp.pe", "ecasasv@usmp.pe", "icajusola@usmp.pe"]
 EMAIL_PASS = "Kingstonk62*"
 SMTP_SERVER = "smtp.office365.com"
 SMTP_PORT = 587
