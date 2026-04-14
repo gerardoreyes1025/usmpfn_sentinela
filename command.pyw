@@ -6,15 +6,18 @@ import requests
 import os
 import sys
 from ping3 import ping as ping3_ping
+import env_utils
 
 # ===============================================
 # CONFIGURACIÓN DEL BOT Y DESTINOS
 # ===============================================
 
-# === Credenciales Telegram ===
-TOKEN = "8564655957:AAEoH57-SCEe0TIISiXZFoOeayaCjkSFCcQ" 
+env_utils.load_dotenv()
+
+# === Credenciales Telegram (desde .env) ===
+TOKEN = os.getenv("TELEGRAM_TOKEN_COM", os.getenv("TELEGRAM_TOKEN", ""))
 # Este es el ID del chat de grupo donde el bot DEBE responder a comandos.
-CHAT_GRUPAL_PERMITIDO = -5085879014
+CHAT_GRUPAL_PERMITIDO = int(os.getenv("CHAT_ID_COM", os.getenv("CHAT_ID", "-5085879014")))
 
 # El ID del bot (8564655957) NO se usa aquí, ya que el bot obtiene el ID
 # del chat privado automáticamente (es un número positivo)

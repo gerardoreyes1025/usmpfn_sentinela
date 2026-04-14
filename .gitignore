@@ -1,0 +1,9 @@
+# Ignorar archivo de credenciales
+.env
+
+# Ignorar archivos compilados de Python
+__pycache__/
+*.py[cod]
+
+# Logs generados por Sentinela (no deben ser versionados)
+C:\SentryLogs/

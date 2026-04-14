@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import psutil
 import os
 from ping3 import ping as ping3_ping
+import env_utils
 
 # ==============================
 # CONFIGURACIÓN DE LOG
@@ -98,19 +99,17 @@ INTERVALOS_TELEGRAM_MIN = [5, 15, 60, 180, 360]
 # Intervalo fijo para Email (en horas)
 INTERVALO_EMAIL_H = 3
 
-# --- CONFIGURACIÓN TELEGRAM (¡ACTUALIZAR!) ---
-# El usuario ha solicitado un canal diferente para personal de switches.
-# ¡REEMPLAZAR ESTOS VALORES POR LOS CREDENCIALES DEL CANAL DE SWITCHES!
-TELEGRAM_TOKEN = "8443835269:AAGb8b3IjMhncS1fkEsUTatHpTkU3yE8tAA"#"8564655957:AAEoH57-SCEe0TIISiXZFoOeayaCjkSFCcQ" 
-CHAT_ID = -5038342805
-# ---------------------------------------------
+env_utils.load_dotenv()
 
-# Email (usando tus credenciales proporcionadas)
-EMAIL_FROM = "gramosr@usmp.pe"
-EMAIL_TO = ["gramosr@usmp.pe", "scalleg@usmp.pe", "ecasasv@usmp.pe", "icajusola@usmp.pe"]
-EMAIL_PASS = "Kingstonk62*"
-SMTP_SERVER = "smtp.office365.com"
-SMTP_PORT = 587
+# Telegram y Email desde .env para el script de switches
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN_SW", os.getenv("TELEGRAM_TOKEN", ""))
+CHAT_ID = int(os.getenv("CHAT_ID_SW", os.getenv("CHAT_ID", "-5038342805")))
+
+EMAIL_FROM = os.getenv("EMAIL_FROM", "gramosr@usmp.pe")
+EMAIL_TO = [e.strip() for e in os.getenv("EMAIL_TO_SW", os.getenv("EMAIL_TO", EMAIL_FROM)).split(",") if e.strip()]
+EMAIL_PASS = os.getenv("EMAIL_PASS", "")
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.office365.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 
 
 # ==============================

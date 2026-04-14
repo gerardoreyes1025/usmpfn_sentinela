@@ -12,15 +12,19 @@ from datetime import datetime, timedelta
 import psutil
 import os
 from ping3 import ping as ping3_ping
+import env_utils
 
 # ==============================
 # CONFIGURACIÓN GENERAL DEL SENTINELA
 # ==============================
 
 # --- CREDENCIALES Y URL ---
-URL_BASE = "https://172.19.1.121:8098/main.do?home&selectSysCode=Acc"
-USUARIO = "admin"
-PASSWORD_VISIBLE = "fILIALNORTEUSMP400" 
+env_utils.load_dotenv()
+
+# Valores por defecto para desarrollar/compatibilidad local; preferir .env
+URL_BASE = os.getenv("URL_BASE", "https://172.19.1.121:8098/main.do?home&selectSysCode=Acc")
+USUARIO = os.getenv("USUARIO", "admin")
+PASSWORD_VISIBLE = os.getenv("PASSWORD_VISIBLE", "")
 
 # --- CONFIGURACIÓN DE LOG ---
 LOG_FILE = r"C:\SentryLogs\sentinela_log_biometricos.txt" 
@@ -60,16 +64,17 @@ BURST_INTERVAL_SECONDS = 60   # Intervalo entre ciclos en modo BURST
 
 # --- CONFIGURACIÓN TELEGRAM Y EMAIL (¡ACTUALIZAR!) ---
 # ¡REEMPLAZAR ESTOS VALORES POR LOS CREDENCIALES DEL CANAL DE SWITCHES!
-TELEGRAM_TOKEN = "8509545584:AAH7wgNuxvGdkERhokjTqGunKXBYpxFqnJw"#"8443835269:AAGb8b3IjMhncS1fkEsUTatHpTkU3yE8tAA"#"8564655957:AAEoH57-SCEe0TIISiXZFoOeayaCjkSFCcQ" 
-CHAT_ID = -5095804558
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN_BIO", os.getenv("TELEGRAM_TOKEN", ""))
+CHAT_ID = int(os.getenv("CHAT_ID_BIO", os.getenv("CHAT_ID", "-5095804558")))
 # ---------------------------------------------
 
 # Email (usando tus credenciales proporcionadas)
-EMAIL_FROM = "gramosr@usmp.pe"
-EMAIL_TO = ["gramosr@usmp.pe", "rsoberonb@usmp.pe","lfernandezc@usmp.pe", "scalleg@usmp.pe", "ecasasv@usmp.pe", "icajusola@usmp.pe"]
-EMAIL_PASS = "Kingstonk62*"
-SMTP_SERVER = "smtp.office365.com"
-SMTP_PORT = 587
+EMAIL_FROM = os.getenv("EMAIL_FROM", "gramosr@usmp.pe")
+# Puede venir como CSV en .env
+EMAIL_TO = [e.strip() for e in os.getenv("EMAIL_TO_BIO", os.getenv("EMAIL_TO", EMAIL_FROM)).split(",") if e.strip()]
+EMAIL_PASS = os.getenv("EMAIL_PASS", "")
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.office365.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", os.getenv("SMTP_PORT", "587")))
 
 # ==============================
 # FUNCIONES DE UTILIDAD (Log, Email, Telegram, Ping)
