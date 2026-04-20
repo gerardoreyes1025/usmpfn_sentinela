@@ -57,6 +57,9 @@ SCAN_INTERVAL_SECONDS = 60
 SLEEP_INTERVAL_SECONDS = 3 * 60 * 60 # 4 horas (14400 segundos)
 FAILURE_CONFIRMATIONS_REQUIRED = 10 
 RECOVERY_CONFIRMATIONS_REQUIRED = 10 # <--- ACTUALIZADO a 5 (Estabilidad al restablecer)
+#
+INVENTORY_ALERT_COOLDOWN = 3 * 60 * 60
+#
 
 # --- NUEVAS CONFIGURACIONES PARA EL MODO BURST ---
 BURST_CYCLES = 15             # Número de ciclos de escaneo rápido al despertar
@@ -247,7 +250,8 @@ def generar_alerta_biometricos(timestamp, motivo, fallos_activos, inventory_for_
     if fallos_reportados:
         mensaje += "<b>🔴 Dispositivos con Fallo Reportado:</b>\n"
         for f in fallos_reportados:
-            ip = f.get('IP', FIXED_DEVICES_INVENTORY.get(f['Dispositivo'], PING_ONLY_DEVICES.get(f['Dispositivo'], 'N/A')))
+            # ip = f.get('IP', FIXED_DEVICES_INVENTORY.get(f['Dispositivo'], PING_ONLY_DEVICES.get(f['Dispositivo'], 'N/A')))
+            ip = f.get('IP', get_fixed_ip(f['Dispositivo']))
             mensaje += f"❌ <b>{escape_html(f['Dispositivo'])}</b> (IP: {ip})\n"
             
             # Solo mostrar estado Web/Registro si no es solo Ping
@@ -287,7 +291,8 @@ def generar_alerta_biometricos(timestamp, motivo, fallos_activos, inventory_for_
         if name in FIXED_DEVICE_NAMES:
             is_ok = is_ok and d.get('Estado') == "Conectado" and d.get('Registro') == "Registrado (Sí)"
         
-        ip = d.get('IP', FIXED_DEVICES_INVENTORY.get(name, PING_ONLY_DEVICES.get(name, 'N/A')))
+        # ip = d.get('IP', FIXED_DEVICES_INVENTORY.get(name, PING_ONLY_DEVICES.get(name, 'N/A')))
+        ip = d.get('IP', get_fixed_ip(name))
         estado_emoji = "✅" if is_ok else "❌"
 
         # Descripción del estado
@@ -307,6 +312,13 @@ def generar_alerta_biometricos(timestamp, motivo, fallos_activos, inventory_for_
 
 device_states = {}
 
+def get_fixed_ip(name):
+    """Extrae la IP del inventario fijo (que almacena tuplas ('PING', 'ip'))."""
+    entry = FIXED_DEVICES_INVENTORY.get(name)
+    if isinstance(entry, tuple):
+        return entry[1]
+    return entry or PING_ONLY_DEVICES.get(name, 'N/A')
+
 def update_device_states(extracted_devices):
     """Actualiza el estado, contador de fallos y ping de los dispositivos, incluyendo solo-ping."""
     
@@ -316,17 +328,36 @@ def update_device_states(extracted_devices):
     new_device_states = {}
     
     # Inicialización para todos los dispositivos (fijos y solo ping)
+    # if not device_states:
+    #     for name, ip in {**FIXED_DEVICES_INVENTORY, **PING_ONLY_DEVICES}.items():
+    #         device_states[name] = {'IP': ip, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0, 'Estado': 'N/A', 'Registro': 'N/A', 'Ping_OK': False, 'Ping_Lat': None}
     if not device_states:
-        for name, ip in {**FIXED_DEVICES_INVENTORY, **PING_ONLY_DEVICES}.items():
-            device_states[name] = {'IP': ip, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0, 'Estado': 'N/A', 'Registro': 'N/A', 'Ping_OK': False, 'Ping_Lat': None}
-
+        for name in ALL_DEVICE_NAMES:
+            device_states[name] = {
+                'IP': get_fixed_ip(name),  # ← ahora extrae solo la IP correcta
+                'FailCount': 0, 'Reported': False, 'RecoveryCount': 0,
+                'Estado': 'N/A', 'Registro': 'N/A', 'Ping_OK': False, 'Ping_Lat': None
+            }
 
     # --- 1. Procesar dispositivos extraídos (Inventario Fijo) ---
     for device in extracted_devices:
         name = device['Dispositivo']
         ip = device['IP']
         
-        state = device_states.get(name, {'IP': ip, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0})
+        # state = device_states.get(name, {'IP': ip, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0})
+        prev = device_states.get(name, {})
+        state = {
+            'IP': ip,
+            'FailCount': prev.get('FailCount', 0),
+            'Reported': prev.get('Reported', False),
+            'RecoveryCount': prev.get('RecoveryCount', 0),
+            'Estado': prev.get('Estado', 'N/A'),
+            'Registro': prev.get('Registro', 'N/A'),
+            'Ping_OK': prev.get('Ping_OK', False),
+            'Ping_Lat': prev.get('Ping_Lat', None),
+        }
+
+
         state['IP'] = ip
         state['Estado'] = device['Estado']
         state['Registro'] = device['Registro']
@@ -361,10 +392,23 @@ def update_device_states(extracted_devices):
     # --- 2. Manejo de dispositivos desaparecidos (Inventario Fijo) ---
     for name in FIXED_DEVICE_NAMES:
         if name not in extracted_names:
-            ip_fija = FIXED_DEVICES_INVENTORY[name]
+            # ip_fija = FIXED_DEVICES_INVENTORY[name]
+            ip_fija = get_fixed_ip(name)
             
-            state = device_states.get(name, {'IP': ip_fija, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0})
+            # state = device_states.get(name, {'IP': ip_fija, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0})
             
+            prev = device_states.get(name, {})
+            state = {
+                'IP': ip_fija,
+                'FailCount': prev.get('FailCount', 0),
+                'Reported': prev.get('Reported', False),
+                'RecoveryCount': prev.get('RecoveryCount', 0),
+                'Estado': prev.get('Estado', 'N/A'),
+                'Registro': prev.get('Registro', 'N/A'),
+                'Ping_OK': prev.get('Ping_OK', False),
+                'Ping_Lat': prev.get('Ping_Lat', None),
+            }
+            #
             state['Estado'] = 'DESAPARECIDO'
             state['Registro'] = 'No Registrado (No)'
             state['IP'] = ip_fija 
@@ -389,8 +433,19 @@ def update_device_states(extracted_devices):
     for name in PING_ONLY_NAMES:
         ip = PING_ONLY_DEVICES[name]
         
-        state = device_states.get(name, {'IP': ip, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0, 'Estado': 'Solo Ping', 'Registro': 'N/A'})
-        
+        # state = device_states.get(name, {'IP': ip, 'FailCount': 0, 'Reported': False, 'RecoveryCount': 0, 'Estado': 'Solo Ping', 'Registro': 'N/A'})
+        prev = device_states.get(name, {})
+        state = {
+            'IP': ip,
+            'FailCount': prev.get('FailCount', 0),
+            'Reported': prev.get('Reported', False),
+            'RecoveryCount': prev.get('RecoveryCount', 0),
+            'Estado': prev.get('Estado', 'Solo Ping'),
+            'Registro': prev.get('Registro', 'N/A'),
+            'Ping_OK': prev.get('Ping_OK', False),
+            'Ping_Lat': prev.get('Ping_Lat', None),
+        }
+
         ping_ok, ping_lat = ping(ip)
         state['Ping_OK'] = ping_ok
         state['Ping_Lat'] = ping_lat
@@ -520,7 +575,8 @@ def monitor_biometrics():
             device_data = d.copy()
             device_data['Dispositivo'] = name 
 
-            ip = d.get('IP', FIXED_DEVICES_INVENTORY.get(name, PING_ONLY_DEVICES.get(name, 'N/A')))
+            # ip = d.get('IP', FIXED_DEVICES_INVENTORY.get(name, PING_ONLY_DEVICES.get(name, 'N/A')))
+            ip = d.get('IP', get_fixed_ip(name))
             ping_ok = d.get('Ping_OK')
             fail_count = d.get('FailCount', 0)
             
@@ -560,7 +616,8 @@ def monitor_biometrics():
         inventory_discrepancy = (len([d for d in extracted_devices if d['Dispositivo'] in FIXED_DEVICE_NAMES]) != len(FIXED_DEVICES_INVENTORY))
         
         # --- A. ALERTAS DE FALLO (Reporte Inicial) ---
-        if devices_to_report or (inventory_discrepancy and (ahora - last_telegram_alert_time) >= timedelta(seconds=SCAN_INTERVAL_SECONDS*2)):
+        # if devices_to_report or (inventory_discrepancy and (ahora - last_telegram_alert_time) >= timedelta(seconds=SCAN_INTERVAL_SECONDS*2)):
+        if devices_to_report or (inventory_discrepancy and (ahora - last_telegram_alert_time) >= timedelta(seconds=INVENTORY_ALERT_COOLDOWN)):
             
             for d in devices_to_report:
                 # Si se reporta un fallo, salimos inmediatamente del BURST y entramos a RECOVERY
