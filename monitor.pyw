@@ -60,8 +60,9 @@ PING_DESTINOS = {
     "SERVIDOR2 Dominio2": "172.19.1.1",
     "SERVIDOR3 Files": "172.19.1.110",
     "SERVIDOR4 SIU": "172.19.1.105",
+    "SERVIDOR5 SIUPRUEBA": "172.19.1.106",
 
-    "SERVIDOR5 PRUEBA": "172.19.1.220",
+    "SERVIDOR6 PRUEBA": "172.19.1.220",
     "SERVIDOR_ZKBIO": "172.19.1.121",
 
     "SWITCH_CORE": "172.19.1.254"
@@ -97,7 +98,7 @@ PING_DESTINOS = {
 # Destinos HTTP (request)
 HTTP_DESTINOS = {
     "HTTP-105": "http://172.19.1.105/SIU/publico/inicioSesion.jsp",
-    "HTTP-106": "http://172.19.1.106/SIU/publico/inicioSesion.jsp"
+    # "HTTP-106": "http://172.19.1.106/SIU/publico/inicioSesion.jsp"
 }
 
 INTERVALO = 60  # segundos (frecuencia con la que se ejecutan las verificaciones)
