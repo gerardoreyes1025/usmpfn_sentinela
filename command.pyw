@@ -815,7 +815,7 @@ ETH2_IP = obtener_ip_eth172()
 
 CATEGORIAS = {
     "servidores": {
-        "INTERNET": ("PING", "8.8.8.8"),
+        "INTERNET 8.8.8.8": ("PING", "8.8.8.8"),
         "SERVIDOR_Dominio": ("PING", "172.19.1.151"),
         "SERVIDOR_Dominio2": ("PING", "172.19.1.1"),
         "SERVIDOR_Files": ("PING", "172.19.1.110"),
