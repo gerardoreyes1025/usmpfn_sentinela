@@ -4,6 +4,7 @@
 # Ignorar archivos compilados de Python
 __pycache__/
 *.py[cod]
+log_ejecucion.txt
 
 # Logs generados por Sentinela (no deben ser versionados)
 C:\SentryLogs/
